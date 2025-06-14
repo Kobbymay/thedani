@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daniel's Writings</title>
+    <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+    <!--===== HEADER =====-->
+    <header class="l-header">
+        <nav class="nav bd-grid">
+            <div>
+                <a href="index.html" class="nav__logo">
+                    <img src="assets/img/logo.png" alt="The DaniEl Logo" class="nav__logo-img">
+                </a>
+            </div>
+            <div class="nav__menu" id="nav-menu">
+                <ul class="nav__list">
+                    <li class="nav__item"><a href="index.html" class="nav__link">Home</a></li>
+
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+    <main class="l-main">
+        <section class="writings section" id="writings">
+            <h2 class="section-title">My Writings</h2>
+            <div class="writings__container bd-grid" id="writings-list">
+                <!-- Articles will be loaded here -->
+            </div>
+            <script>
+            function renderWritings() {
+                const writingsList = document.getElementById('writings-list');
+                writingsList.innerHTML = '';
+                fetch('http://localhost:3001/api/articles')
+                    .then(response => response.json())
+                    .then(writings => {
+                        if (writings.length === 0) {
+                            writingsList.innerHTML = '<p style="color:#FFD700;">No articles yet.</p>';
+                        } else {
+                            writings.forEach(writing => {
+                                const div = document.createElement('div');
+                                div.className = 'writing__item case__item';
+                                div.innerHTML = `<h3>${writing.title}</h3><p>${writing.content.replace(/\n/g, '<br>')}</p>`;
+                                writingsList.appendChild(div);
+                            });
+                        }
+                    })
+                    .catch(() => {
+                        writingsList.innerHTML = '<p style="color:#FFD700;">Error loading articles from server.</p>';
+                    });
+            }
+            renderWritings();
+            </script>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <p class="footer__title">Daniel</p>
+        <p class="footer__copy">&#169; 2025 Daniel. All rights reserved</p>
+    </footer>
+    <script src="assets/js/main.js"></script>
+    <script>
+    // Ensure menu button works on all pages (for pages with multiple navs or dynamic content)
+    document.addEventListener('DOMContentLoaded', function() {
+      var navToggle = document.getElementById('nav-toggle');
+      var navMenu = document.getElementById('nav-menu');
+      if (navToggle && navMenu) {
+        navToggle.onclick = function() {
+          navMenu.classList.toggle('show');
+          // Accessibility: set aria-expanded
+          var expanded = navMenu.classList.contains('show');
+          navToggle.setAttribute('aria-expanded', expanded);
+          navMenu.setAttribute('aria-hidden', !expanded);
+        };
+        // Close menu with Escape key
+        document.addEventListener('keydown', function(e) {
+          if (e.key === 'Escape' && navMenu.classList.contains('show')) {
+            navMenu.classList.remove('show');
+            navToggle.setAttribute('aria-expanded', 'false');
+            navMenu.setAttribute('aria-hidden', 'true');
+          }
+        });
+        // Close menu when a link is clicked
+        document.querySelectorAll('.nav__link').forEach(function(link) {
+          link.addEventListener('click', function() {
+            if (window.innerWidth < 768) {
+              navMenu.classList.remove('show');
+              navToggle.setAttribute('aria-expanded', 'false');
+              navMenu.setAttribute('aria-hidden', 'true');
+            }
+          });
+        });
+        // Set ARIA attributes for accessibility
+        navToggle.setAttribute('aria-controls', 'nav-menu');
+        navToggle.setAttribute('aria-expanded', 'false');
+        navToggle.setAttribute('aria-label', 'Open navigation menu');
+        navMenu.setAttribute('aria-hidden', 'true');
+      }
+    });
+    </script>
+  </body>
+</html>

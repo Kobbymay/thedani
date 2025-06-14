@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login</title>
+    <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+    <header class="header" id="header">
+        <nav class="nav bd-grid">
+            <div>
+                <a href="#" class="nav__logo">Admin Panel</a>
+            </div>
+
+            <div class="nav__menu" id="nav-menu">                <ul class="nav__list">
+                    <li class="nav__item">
+                        <a href="index.html" class="nav__link">Home</a>
+                    </li>
+                    <li class="nav__item">
+                        <a href="writings.html" class="nav__link">Writings</a>
+                    </li>
+                    <li class="nav__item">
+                        <a href="admin.html" class="nav__link">Admin</a>
+                    </li>
+                </ul>
+            </div>
+
+            <button class="nav__toggle" id="nav-toggle" aria-controls="nav-menu" aria-expanded="false" aria-label="Open navigation menu">
+                <span class="nav__toggle-bar"></span>
+                <span class="nav__toggle-bar"></span>
+                <span class="nav__toggle-bar"></span>
+            </button>
+        </nav>
+    </header>
+
+    <main class="l-main">
+        <section class="contact section" id="admin-login">
+            <h2 class="section-title">Admin Login</h2>
+            <div class="contact__container bd-grid">
+                <form id="adminLoginForm" class="contact__form admin-login-form">
+                    <input type="text" id="adminUsername" class="contact__input" placeholder="Username" required>
+                    <input type="password" id="adminPassword" class="contact__input" placeholder="Password" required>
+                    <input type="submit" value="Login" class="contact__button button">
+                    <p id="loginError" class="admin-login-error">Invalid credentials!</p>
+                </form>
+            </div>
+        </section>
+    </main>
+    <script>
+    // Set your admin credentials here
+    const ADMIN_USERNAME = "admin";
+    const ADMIN_PASSWORD = "password123";
+
+    document.getElementById('adminLoginForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const username = document.getElementById('adminUsername').value.trim();
+        const password = document.getElementById('adminPassword').value;
+        if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
+            localStorage.setItem('isAdmin', 'true');
+            window.location.href = "admin.html";
+        } else {
+            document.getElementById('loginError').style.display = 'block';
+        }
+    });
+    </script>
+    <script src="assets/js/main.js"></script>
+    <script>
+    // Ensure menu button works on all pages (for pages with multiple navs or dynamic content)
+    document.addEventListener('DOMContentLoaded', function() {
+      var navToggle = document.getElementById('nav-toggle');
+      var navMenu = document.getElementById('nav-menu');
+      if (navToggle && navMenu) {
+        navToggle.onclick = function() {
+          navMenu.classList.toggle('show');
+          // Accessibility: set aria-expanded
+          var expanded = navMenu.classList.contains('show');
+          navToggle.setAttribute('aria-expanded', expanded);
+          navMenu.setAttribute('aria-hidden', !expanded);
+        };
+        // Close menu with Escape key
+        document.addEventListener('keydown', function(e) {
+          if (e.key === 'Escape' && navMenu.classList.contains('show')) {
+            navMenu.classList.remove('show');
+            navToggle.setAttribute('aria-expanded', 'false');
+            navMenu.setAttribute('aria-hidden', 'true');
+          }
+        });
+        // Close menu when a link is clicked
+        document.querySelectorAll('.nav__link').forEach(function(link) {
+          link.addEventListener('click', function() {
+            if (window.innerWidth < 768) {
+              navMenu.classList.remove('show');
+              navToggle.setAttribute('aria-expanded', 'false');
+              navMenu.setAttribute('aria-hidden', 'true');
+            }
+          });
+        });
+        // Set ARIA attributes for accessibility
+        navToggle.setAttribute('aria-controls', 'nav-menu');
+        navToggle.setAttribute('aria-expanded', 'false');
+        navToggle.setAttribute('aria-label', 'Open navigation menu');
+        navMenu.setAttribute('aria-hidden', 'true');
+      }
+    });
+    </script>
+  </body>
+</html>
