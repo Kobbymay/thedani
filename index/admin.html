@@ -66,297 +66,202 @@
         <p class="footer__copy">&#169; 2025 Daniel. All rights reserved</p>
     </footer>
 
-    <script>    // Fetch and display articles from the backend
-    async function renderAdminWritings() {
-        const writingsList = document.getElementById('admin-writings-list');
-        writingsList.innerHTML = '';
-        
-        try {
-            const response = await fetch('http://localhost:3001/api/articles');
-            if (!response.ok) throw new Error('Failed to fetch articles');
-            const writings = await response.json();
+   <script>
+  // Detect API base URL depending on environment
+  const API_BASE = window.location.hostname === "localhost"
+    ? "http://localhost:3001"
+    : "https://your-backend-service.onrender.com"; // Replace with your Render backend URL
 
-            if (writings.length === 0) {
-                writingsList.innerHTML = '<p style="color:#FFD700;">No articles yet.</p>';
-                return;
-            }
+  // Fetch and display articles from the backend
+  async function renderAdminWritings() {
+    const writingsList = document.getElementById('admin-writings-list');
+    writingsList.innerHTML = '';
 
-            writings.forEach((writing, idx) => {
-                const div = document.createElement('div');
-                div.className = 'writing__item case__item';
-                div.innerHTML = `
-                    <h3>${writing.title}</h3>
-                    <p>${writing.content.replace(/\n/g, '<br>')}</p>
-                    <div class="writing__actions">
-                        <button class="edit-btn button admin-edit-btn" data-idx="${idx}">Edit</button>
-                        <button class="delete-btn button admin-delete-btn" data-idx="${idx}">Delete</button>
-                    </div>
-                `;
-                div.dataset.filename = writing.filename || '';
-                div.dataset.title = writing.title;
-                div.dataset.content = writing.content;
-                writingsList.appendChild(div);
-            });
-        } catch (err) {
-            console.error('Error loading articles:', err);
-            writingsList.innerHTML = '<p style="color:#FFD700;">Error loading articles from server.</p>';
-        }
+    try {
+      const response = await fetch(`${API_BASE}/api/articles`);
+      if (!response.ok) throw new Error('Failed to fetch articles');
+      const writings = await response.json();
+
+      if (!writings.length) {
+        writingsList.innerHTML = '<p style="color:#FFD700;">No articles yet.</p>';
+        return;
+      }
+
+      writings.forEach((writing, idx) => {
+        const div = document.createElement('div');
+        div.className = 'writing__item case__item';
+        div.innerHTML = `
+          <h3>${writing.title}</h3>
+          <p>${writing.content.replace(/\n/g, '<br>')}</p>
+          <div class="writing__actions">
+            <button class="edit-btn button admin-edit-btn" data-idx="${idx}">Edit</button>
+            <button class="delete-btn button admin-delete-btn" data-idx="${idx}">Delete</button>
+          </div>
+        `;
+        div.dataset.filename = writing.filename || '';
+        div.dataset.title = writing.title;
+        div.dataset.content = writing.content;
+        writingsList.appendChild(div);
+      });
+    } catch (err) {
+      console.error('Error loading articles:', err);
+      writingsList.innerHTML = '<p style="color:#FFD700;">Error loading articles from server.</p>';
     }
+  }
 
-    // Fetch and display contact messages from the backend
-    async function loadMessages() {
-        const grid = document.getElementById('messagesGrid');
-        try {
-            const res = await fetch('http://localhost:3001/api/contacts');
-            if (!res.ok) {
-                throw new Error(`HTTP error! status: ${res.status}`);
-            }
-            const messages = await res.json();
-            
-            if (!Array.isArray(messages) || messages.length === 0) {
-                grid.innerHTML = '<p style="color:#666;text-align:center;padding:20px;">No messages</p>';
-                return;
-            }
-            
-            grid.innerHTML = '';
-            messages.slice().reverse().forEach((msg, idx) => {
-                const realIndex = messages.length - 1 - idx;
-                const div = document.createElement('div');
-                div.className = 'message__item highlight__item';
-                div.innerHTML = `
-                    <h3>${msg.name}</h3>
-                    <p><strong>Email:</strong> ${msg.email}</p>
-                    <p>${msg.message}</p>
-                    <p style="font-size:0.9em;color:#888;">${new Date(msg.date).toLocaleString()}</p>
-                    <button class="delete-contact-btn button" data-idx="${realIndex}" style="background:#b22222;color:#fff;margin-top:0.5rem;">Delete</button>
-                `;
-                grid.appendChild(div);
-            });
-        } catch (error) {
-            console.error('Error loading messages:', error);
-            grid.innerHTML = '<p class="error-message">Failed to load messages. Please try again later.</p>';
-        }
-    }
+  // Fetch and display contact messages
+  async function loadContactMessages() {
+    const container = document.getElementById('contact-messages');
+    try {
+      const response = await fetch(`${API_BASE}/api/contacts`);
+      if (!response.ok) throw new Error('Failed to fetch contacts');
+      const contacts = await response.json();
 
-    async function deleteMessage(index) {
-        if (confirm('Are you sure you want to delete this message?')) {
+      if (!Array.isArray(contacts) || !contacts.length) {
+        container.innerHTML = '<p style="color:#666;text-align:center;padding:20px;">No messages</p>';
+        return;
+      }
+
+      container.innerHTML = '';
+      contacts.reverse().forEach((contact, idx) => {
+        const messageEl = document.createElement('div');
+        messageEl.className = 'contact-message';
+        messageEl.innerHTML = `
+          <h3>${contact.name}</h3>
+          <p class="contact-email">${contact.email}</p>
+          <p class="contact-text">${contact.message}</p>
+          <p class="contact-date">${new Date(contact.date).toLocaleString()}</p>
+          <button class="delete-contact-btn button" data-idx="${contacts.length - 1 - idx}" style="background:#b22222;color:#fff;margin-top:0.5rem;">Delete</button>
+        `;
+        container.appendChild(messageEl);
+      });
+
+      // Delete single message
+      document.querySelectorAll('.delete-contact-btn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          const idx = e.target.getAttribute('data-idx');
+          if (confirm('Are you sure you want to delete this message?')) {
             try {
-                const res = await fetch(`http://localhost:3001/api/contact/${index}`, { method: 'DELETE' });
-                if (!res.ok) throw new Error('Failed to delete message');
-                await loadMessages();
-            } catch (error) {
-                console.error('Error deleting message:', error);
-                alert('Failed to delete message. Please try again.');
+              const res = await fetch(`${API_BASE}/api/contacts/${idx}`, { method: 'DELETE' });
+              if (!res.ok) throw new Error('Failed to delete message');
+              await loadContactMessages();
+            } catch (err) {
+              console.error('Error deleting message:', err);
+              alert('Failed to delete message. Please try again.');
             }
-        }
-    }
-
-    // Restore plain textarea logic for add/edit
-    document.getElementById('adminWritingForm').addEventListener('submit', async function(e) {
-        e.preventDefault();
-        const title = document.getElementById('adminTitle').value.trim();
-        const content = document.getElementById('adminContent').value.trim();
-        const editIndex = document.getElementById('editIndex').value;
-        let filename = '';
-        
-        if (!title || !content) {
-            alert('Please fill in both title and content fields');
-            return;
-        }
-
-        if (editIndex !== '') {
-            const articleDiv = document.querySelectorAll('.writing__item')[editIndex];
-            filename = articleDiv ? articleDiv.dataset.filename : '';
-        }
-
-        try {
-            if (editIndex !== '' && filename) {
-                // Edit mode
-                const res = await fetch(`http://localhost:3001/api/articles/${filename}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ title, content })
-                });
-                
-                if (!res.ok) throw new Error('Failed to update article');
-                const data = await res.json();
-                
-                if (data.success) {
-                    document.getElementById('adminSuccess').textContent = 'Article updated!';
-                    await renderAdminWritings();
-                }
-            } else {
-                // Add mode
-                const res = await fetch('http://localhost:3001/api/articles', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ title, content })
-                });
-
-                if (!res.ok) throw new Error('Failed to publish article');
-                const data = await res.json();
-                
-                if (data.success) {
-                    document.getElementById('adminSuccess').textContent = 'Article published!';
-                    await renderAdminWritings();
-                }
-            }
-            
-            this.reset();
-            document.getElementById('editIndex').value = '';
-            document.getElementById('adminSuccess').style.display = 'block';
-            setTimeout(() => {
-                document.getElementById('adminSuccess').style.display = 'none';
-            }, 2000);
-        } catch (error) {
-            console.error('Error:', error);
-            alert('Failed to save article. Please try again.');
-        }
-    });
-
-    // Restore edit/delete button event delegation
-    document.addEventListener('click', function(e) {
-        if (e.target.classList.contains('edit-btn')) {
-            const idx = e.target.getAttribute('data-idx');
-            const articleDiv = document.querySelectorAll('.writing__item')[idx];
-            document.getElementById('adminTitle').value = articleDiv.dataset.title;
-            document.getElementById('adminContent').value = articleDiv.dataset.content;
-            document.getElementById('editIndex').value = idx;
-            document.querySelector('#adminWritingForm input[type="submit"]').value = "Update";
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-        if (e.target.classList.contains('delete-btn')) {
-            const idx = e.target.getAttribute('data-idx');
-            const articleDiv = document.querySelectorAll('.writing__item')[idx];
-            const filename = articleDiv ? articleDiv.dataset.filename : '';
-            if (filename && confirm('Are you sure you want to delete this article?')) {
-                fetch(`http://localhost:3001/api/articles/${filename}`, {
-                    method: 'DELETE'
-                })
-                .then(res => res.json())
-                .then(() => {
-                    renderAdminWritings();
-                });
-            }
-        }
-    });    // Fetch and display contact messages
-    async function loadContactMessages() {
-        const container = document.getElementById('contact-messages');
-        try {
-            const response = await fetch('http://localhost:3001/api/contacts');
-            if (!response.ok) throw new Error('Failed to fetch contacts');
-            const contacts = await response.json();
-            
-            if (!Array.isArray(contacts) || contacts.length === 0) {
-                container.innerHTML = '<p style="color:#666;text-align:center;padding:20px;">No messages</p>';
-                return;
-            }
-            
-            container.innerHTML = '';
-            contacts.reverse().forEach((contact, idx) => {
-                const messageEl = document.createElement('div');
-                messageEl.className = 'contact-message';
-                messageEl.innerHTML = `
-                    <h3>${contact.name}</h3>
-                    <p class="contact-email">${contact.email}</p>
-                    <p class="contact-text">${contact.message}</p>
-                    <p class="contact-date">${new Date(contact.date).toLocaleString()}</p>
-                    <button class="delete-contact-btn button" data-idx="${contacts.length - 1 - idx}" style="background:#b22222;color:#fff;margin-top:0.5rem;">Delete</button>
-                `;
-                container.appendChild(messageEl);
-            });
-
-            // Add event listeners for delete buttons
-            document.querySelectorAll('.delete-contact-btn').forEach(btn => {
-                btn.addEventListener('click', async (e) => {
-                    const idx = e.target.getAttribute('data-idx');
-                    if (confirm('Are you sure you want to delete this message?')) {
-                        try {
-                            const res = await fetch(`http://localhost:3001/api/contacts/${idx}`, {
-                                method: 'DELETE'
-                            });
-                            if (!res.ok) throw new Error('Failed to delete message');
-                            await loadContactMessages(); // Reload messages after deletion
-                        } catch (err) {
-                            console.error('Error deleting message:', err);
-                            alert('Failed to delete message. Please try again.');
-                        }
-                    }
-                });
-            });
-
-            // Add event listener for delete all button
-            document.getElementById('deleteAllMessagesBtn').addEventListener('click', async () => {
-                if (contacts.length === 0) {
-                    alert('No messages to delete.');
-                    return;
-                }
-                if (confirm('Are you sure you want to delete all messages? This cannot be undone.')) {
-                    try {
-                        const deletePromises = contacts.map((_, i) => 
-                            fetch(`http://localhost:3001/api/contacts/${i}`, { method: 'DELETE' })
-                        );
-                        await Promise.all(deletePromises);
-                        await loadContactMessages(); // Reload messages after deletion
-                    } catch (err) {
-                        console.error('Error deleting all messages:', err);
-                        alert('Failed to delete all messages. Please try again.');
-                    }
-                }
-            });
-
-        } catch (err) {
-            console.error('Error loading contacts:', err);
-            container.innerHTML = '<p class="error-message">Failed to load messages. Please try again later.</p>';
-        }
-    }
-
-    // Load messages when page loads
-    document.addEventListener('DOMContentLoaded', () => {
-        loadContactMessages();
-        renderAdminWritings();
-        loadMessages();
-    });
-    </script>
-    <script src="assets/js/main.js"></script>
-    <script>
-    // Ensure menu button works on all pages (for pages with multiple navs or dynamic content)
-    document.addEventListener('DOMContentLoaded', function() {
-      var navToggle = document.getElementById('nav-toggle');
-      var navMenu = document.getElementById('nav-menu');
-      if (navToggle && navMenu) {
-        navToggle.onclick = function() {
-          navMenu.classList.toggle('show');
-          // Accessibility: set aria-expanded
-          var expanded = navMenu.classList.contains('show');
-          navToggle.setAttribute('aria-expanded', expanded);
-          navMenu.setAttribute('aria-hidden', !expanded);
-        };
-        // Close menu with Escape key
-        document.addEventListener('keydown', function(e) {
-          if (e.key === 'Escape' && navMenu.classList.contains('show')) {
-            navMenu.classList.remove('show');
-            navToggle.setAttribute('aria-expanded', 'false');
-            navMenu.setAttribute('aria-hidden', 'true');
           }
         });
-        // Close menu when a link is clicked
-        document.querySelectorAll('.nav__link').forEach(function(link) {
-          link.addEventListener('click', function() {
-            if (window.innerWidth < 768) {
-              navMenu.classList.remove('show');
-              navToggle.setAttribute('aria-expanded', 'false');
-              navMenu.setAttribute('aria-hidden', 'true');
-            }
-          });
+      });
+
+      // Delete all messages
+      document.getElementById('deleteAllMessagesBtn').addEventListener('click', async () => {
+        if (!contacts.length) {
+          alert('No messages to delete.');
+          return;
+        }
+        if (confirm('Are you sure you want to delete all messages? This cannot be undone.')) {
+          try {
+            const deletePromises = contacts.map((_, i) =>
+              fetch(`${API_BASE}/api/contacts/${i}`, { method: 'DELETE' })
+            );
+            await Promise.all(deletePromises);
+            await loadContactMessages();
+          } catch (err) {
+            console.error('Error deleting all messages:', err);
+            alert('Failed to delete all messages. Please try again.');
+          }
+        }
+      });
+    } catch (err) {
+      console.error('Error loading contacts:', err);
+      container.innerHTML = '<p class="error-message">Failed to load messages. Please try again later.</p>';
+    }
+  }
+
+  // Submit article (add or edit)
+  document.getElementById('adminWritingForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const title = document.getElementById('adminTitle').value.trim();
+    const content = document.getElementById('adminContent').value.trim();
+    const editIndex = document.getElementById('editIndex').value;
+    let filename = '';
+
+    if (!title || !content) {
+      alert('Please fill in both title and content fields');
+      return;
+    }
+
+    if (editIndex !== '') {
+      const articleDiv = document.querySelectorAll('.writing__item')[editIndex];
+      filename = articleDiv ? articleDiv.dataset.filename : '';
+    }
+
+    try {
+      let res;
+      if (editIndex !== '' && filename) {
+        res = await fetch(`${API_BASE}/api/articles/${filename}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title, content })
         });
-        // Set ARIA attributes for accessibility
-        navToggle.setAttribute('aria-controls', 'nav-menu');
-        navToggle.setAttribute('aria-expanded', 'false');
-        navToggle.setAttribute('aria-label', 'Open navigation menu');
-        navMenu.setAttribute('aria-hidden', 'true');
+      } else {
+        res = await fetch(`${API_BASE}/api/articles`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title, content })
+        });
       }
-    });
-    </script>
-  </body>
+
+      if (!res.ok) throw new Error('Failed to save article');
+      const data = await res.json();
+
+      if (data.success) {
+        document.getElementById('adminSuccess').textContent =
+          editIndex !== '' ? 'Article updated!' : 'Article published!';
+        await renderAdminWritings();
+      }
+
+      this.reset();
+      document.getElementById('editIndex').value = '';
+      document.getElementById('adminSuccess').style.display = 'block';
+      setTimeout(() => {
+        document.getElementById('adminSuccess').style.display = 'none';
+      }, 2000);
+    } catch (error) {
+      console.error('Error:', error);
+      alert('Failed to save article. Please try again.');
+    }
+  });
+
+  // Edit & delete buttons for articles
+  document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('edit-btn')) {
+      const idx = e.target.getAttribute('data-idx');
+      const articleDiv = document.querySelectorAll('.writing__item')[idx];
+      document.getElementById('adminTitle').value = articleDiv.dataset.title;
+      document.getElementById('adminContent').value = articleDiv.dataset.content;
+      document.getElementById('editIndex').value = idx;
+      document.querySelector('#adminWritingForm input[type="submit"]').value = "Update";
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    if (e.target.classList.contains('delete-btn')) {
+      const idx = e.target.getAttribute('data-idx');
+      const articleDiv = document.querySelectorAll('.writing__item')[idx];
+      const filename = articleDiv ? articleDiv.dataset.filename : '';
+      if (filename && confirm('Are you sure you want to delete this article?')) {
+        fetch(`${API_BASE}/api/articles/${filename}`, { method: 'DELETE' })
+          .then(res => res.json())
+          .then(() => renderAdminWritings())
+          .catch(err => console.error('Error deleting article:', err));
+      }
+    }
+  });
+
+  // Load data when page loads
+  document.addEventListener('DOMContentLoaded', () => {
+    loadContactMessages();
+    renderAdminWritings();
+  });
+</script>
+</body>
 </html>
