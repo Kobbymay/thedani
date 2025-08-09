@@ -83,10 +83,12 @@ if (typeof ScrollReveal !== 'undefined') { // Fix: check if ScrollReveal is load
         duration: 2000,
         delay: 200,
         // reset: true
-    });    sr.reveal('.home__data, .about__img, .skills__subtitle, .skills__text', {});
+    });    
+    sr.reveal('.home__data, .about__img, .skills__subtitle, .skills__text', {});
     sr.reveal('.home__img, .about__subtitle, .about__text, .skills__img', { delay: 400 });
     sr.reveal('.home__social-icon', { interval: 200 });
-    sr.reveal('.skills__data, .work__img, .contact__input', { interval: 200 });    sr.reveal('.highlight__item', {
+    sr.reveal('.skills__data, .work__img, .contact__input', { interval: 200 });    
+    sr.reveal('.highlight__item', {
         interval: 200,
         origin: 'top',
         distance: '30px',
@@ -157,9 +159,10 @@ document.addEventListener('DOMContentLoaded', function () {
             if (!emailPattern.test(email)) {
                 alert('Please enter a valid email address.');
                 return;
-            }            try {
+            }            
+            try {
                 submitButton.disabled = true;
-                const res = await fetch('http://localhost:3001/api/contacts', {
+                const res = await fetch('https://thedani.onrender.com/api/contacts', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
